@@ -1,0 +1,59 @@
+import express from 'express';
+import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '@repo/backend-common/config';
+import { CreateUserSchema, SigninSchmema, CreateRoomSchema } from '@repo/common/types';
+
+const app = express();
+
+app.post("/signup", (req, res) => {
+
+    const data = CreateUserSchema.safeParse(req.body);
+    if(!data.success){
+        res.json({
+            message: "Invalid input"
+        });
+        return;
+    }
+    // db call
+
+    res.json({
+        userId: 123,
+    })
+})
+
+app.post("/signin", (req, res) => {
+
+    const data = SigninSchmema.safeParse(req.body);
+    if(!data.success){
+        res.json({
+            message: "Invalid input"
+        });
+        return;
+    }
+
+    const userId = 123; 
+    const token = jwt.sign({
+        userId
+    }, JWT_SECRET)
+
+    res.json({
+        token,
+    })
+}) 
+
+app.post("/create-room", (req, res) => {
+
+    const data = CreateRoomSchema.safeParse(req.body);
+    if(!data.success){
+        res.json({
+            message: "Invalid input"
+        });
+        return;
+    }
+    // db call
+    res.json({
+        roomId: 456,
+    })
+})
+
+app.listen(3001);

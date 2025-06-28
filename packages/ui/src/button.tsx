@@ -1,20 +1,24 @@
-"use client";
+import { JSX, ReactNode } from "react";
 
-import { ReactNode } from "react";
-
-interface ButtonProps {
+export function Button({
+  children, 
+  className,
+  onClick
+} : {
   children: ReactNode;
   className?: string;
-  appName: string;
-}
-
-export const Button = ({ children, className, appName }: ButtonProps) => {
+  onClick?: () => void;
+}): JSX.Element {
   return (
     <button
-      className={className}
-      onClick={() => alert(`Hello from your ${appName} app!`)}
+      className = {`p-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded ${className}`}
+      onClick={() => {
+        if (onClick) {
+          onClick();
+        }
+      }}
     >
       {children}
     </button>
   );
-};
+}

@@ -5,7 +5,7 @@ import bcrypt from 'bcrypt';
 import { CreateUserSchema } from '@repo/common/types';
 import { prismaClient } from '@repo/db/client';
 
-export const signUp = async (req: Request, res: Response): Promise<void> => {
+export const signUp = async (req: Request, res: Response) => {
   const parsedData = CreateUserSchema.safeParse(req.body);
 
   if (!parsedData.success) {

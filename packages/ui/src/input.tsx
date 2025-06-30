@@ -15,7 +15,7 @@ export function Input({
 }): JSX.Element {
   return (
     <input
-      className={`p-2 border rounded ${className}`}
+      className={`p-2 border rounded-lg ${className}`}
       type={type}
       placeholder={placeholder}
       value={value}

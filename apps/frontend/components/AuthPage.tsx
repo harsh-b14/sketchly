@@ -43,7 +43,7 @@ export function AuthPage({ isSignin }: { isSignin: boolean }) {
                 return;
             }
         
-            axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+            axios.defaults.headers.common["Authorization"] =  token;
             localStorage.setItem("token", token);
             toast.success("Sign in successful");
 
@@ -81,7 +81,7 @@ export function AuthPage({ isSignin }: { isSignin: boolean }) {
                 return;
             }
 
-            axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+            axios.defaults.headers.common["Authorization"] = token;
             localStorage.setItem("token", token);
             toast.success("User created successfully");
 

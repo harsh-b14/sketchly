@@ -1,8 +1,10 @@
 import { Edit3, Menu, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const router = useRouter();
 
     return(
         <nav className="fixed top-0 w-full bg-white/95 backdrop-blur-sm border-b border-gray-100 z-50">
@@ -21,7 +23,7 @@ export function Navbar() {
                     {/* <a href="#pricing" className="text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
                     <a href="#testimonials" className="text-gray-600 hover:text-gray-900 transition-colors">Reviews</a> */}
                     <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">Help</a>
-                    <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">Sign In</a>
+                    <a href="/signin" className="text-gray-600 hover:text-gray-900 transition-colors">Sign In</a>
                     <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                     Get Started
                     </button>
@@ -45,7 +47,7 @@ export function Navbar() {
                     {/* <a href="#pricing" className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">Pricing</a>
                     <a href="#testimonials" className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">Reviews</a> */}
                     <a href="#" className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">Help</a>
-                    <a href="#" className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">Sign In</a>
+                    <a href="/signin" className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">Sign In</a>
                     <button className="w-full mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                     Get Started
                     </button>

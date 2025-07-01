@@ -85,7 +85,6 @@ export const getRoomChats = async (req: Request, res: Response) => {
     }
 }
 
-
 export const findRoom = async (req: Request, res: Response) => {
     try {
         const slug = req.params.slug;
@@ -99,6 +98,11 @@ export const findRoom = async (req: Request, res: Response) => {
         const room = prismaClient.room.findFirst({
             where:{
                 slug: slug
+            },
+            select: {
+                id: true,
+                slug: true,
+                adminId: true,
             }
         })
 
@@ -120,5 +124,42 @@ export const findRoom = async (req: Request, res: Response) => {
         });
         return;
         
+    }
+}
+
+export const getAllRooms = async (req: Request, res: Response) => {
+    try {
+        const userId = req?.userId;
+        if(!userId) {
+            res.status(403).json({
+                message: 'Unauthorized access'
+            });
+            return;
+        }
+
+        const rooms = await prismaClient.room.findMany({
+            where: {
+                adminId: userId
+            },
+            orderBy: {
+                createdAt: 'desc'
+            },
+            select: {
+                id: true,
+                slug: true,
+                adminId: true,
+            }
+        });
+
+        res.status(200).json({
+            message: "Rooms fetched successfully",
+            rooms
+        });
+        return;
+    } catch (error) {
+        res.status(500).json({
+            message: 'Failed to fetch rooms',
+        });
+        return;
     }
 }

@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import { auth } from './middleware/auth.js';
 import cors from 'cors';
-import { createRoom, findRoom, getRoomChats } from './controllers/room.js';
+import { createRoom, findRoom, getRoomChats, getAllRooms } from './controllers/room.js';
 import { signIn } from './controllers/signIn.js';
 import { signUp } from './controllers/signUp.js';
 
@@ -18,7 +18,9 @@ app.post("/api/v1/create-room", auth, createRoom);
 
 app.get("/api/v1/chats/:roomId", auth, getRoomChats);
 
-app.get("/api/v1/room/:slug", auth, findRoom)
+app.get("/api/v1/room/:slug", auth, findRoom);
+
+app.get("/api/v1/all-room", auth, getAllRooms);
 
 app.listen(3001, () => {
     console.log(process.env.JWT_SECRET);

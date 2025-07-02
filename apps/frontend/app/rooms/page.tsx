@@ -4,6 +4,7 @@ import { BACKEND_URL } from "@/config";
 import { restoreToken } from "@/lib/redux/slices/authSlice";
 import { Button } from "@repo/ui/button";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
@@ -14,6 +15,7 @@ export default function RoomsPage() {
     const [showJoinModal, setShowJoinModal] = useState(false);
     const [roomName, setRoomName] = useState("");
     const [roomLink, setRoomLink] = useState("");
+    const router = useRouter();
     const dispatch = useDispatch();
 
     useEffect(() => {
@@ -101,7 +103,12 @@ export default function RoomsPage() {
                     <p className="text-sm text-gray-300 mb-4">
                     Admin ID: <span className="font-mono break-words">{room.adminId}</span>
                     </p>
-                    <Button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 mt-auto w-full rounded-lg">
+                    <Button 
+                        onClick={() => {
+                            router.push(`/canvas/${room.id}`);
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 mt-auto w-full rounded-lg"
+                    >
                     Open Room
                     </Button>
                 </div>

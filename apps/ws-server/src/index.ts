@@ -63,6 +63,8 @@ wss.on("connection", async (ws, request) => {
             return;
         }
 
+        console.log(parsedData);
+
         const user = users.find(u => u.ws === ws);
         if (!user) return;
 
@@ -111,6 +113,7 @@ wss.on("connection", async (ws, request) => {
                         type: "warning",
                         message: `You're not joined to room ${roomId}. Use "join_room" before chatting.`
                     }));
+                    console.log(`User ${user.userId} tried to send a message in room ${roomId} without joining.`);
                     return;
                 }
 
@@ -123,10 +126,11 @@ wss.on("connection", async (ws, request) => {
                         type: "warning",
                         message: `Room ${roomId} does not exist.`
                     }));
+                    console.log(`User ${user.userId} tried to send a message in non-existent room ${roomId}.`);
                     return;
                 }
 
-                await prismaClient.chat.create({
+                const chat = await prismaClient.chat.create({
                     data: {
                         userId: user.userId,
                         roomId: roomId,
@@ -134,9 +138,14 @@ wss.on("connection", async (ws, request) => {
                     }
                 });
 
+                if(!chat){
+                    console.log("Failed to create chat message in database.");
+                    return;
+                }
+
                 // Broadcast to all users in that room
                 users.forEach(u => {
-                    if (u.userId != userId && u.rooms.includes(String(roomId))) {
+                    if (u.rooms.includes(String(roomId))) {
                         u.ws.send(JSON.stringify({
                             type: "chat",
                             message: messageText,
@@ -144,6 +153,8 @@ wss.on("connection", async (ws, request) => {
                         }));
                     }
                 });
+
+                console.log(`User ${user.userId} sent a message in room ${roomId}: ${messageText}`);
             }
 
         } catch (err) {

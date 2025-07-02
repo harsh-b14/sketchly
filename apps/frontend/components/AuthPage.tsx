@@ -9,6 +9,8 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { SigninSchmema, CreateUserSchema } from "@repo/common/types";
 import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { setToken } from "@/lib/redux/slices/authSlice";
 
 export function AuthPage({ isSignin }: { isSignin: boolean }) {
 
@@ -16,6 +18,7 @@ export function AuthPage({ isSignin }: { isSignin: boolean }) {
     const [password, setPassword] = useState("");
     const [name, setName] = useState("");
     const router = useRouter();
+    const dispatch = useDispatch();
 
     async function signInHandler(
         {
@@ -47,7 +50,9 @@ export function AuthPage({ isSignin }: { isSignin: boolean }) {
             localStorage.setItem("token", token);
             toast.success("Sign in successful");
 
-            router.push("/");
+            dispatch(setToken(token));
+
+            router.push("/rooms");
         
         } catch (error: any) {
             const message = error?.response?.data?.message || "An error occurred while signing in.";
@@ -85,7 +90,9 @@ export function AuthPage({ isSignin }: { isSignin: boolean }) {
             localStorage.setItem("token", token);
             toast.success("User created successfully");
 
-            router.push("/");
+            dispatch(setToken(token));
+
+            router.push("/rooms");
 
         } catch (error: any) {
             const message = error?.response?.data?.message || "An error occurred while signing up.";

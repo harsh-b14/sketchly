@@ -3,8 +3,23 @@ import { Footer } from '@/components/Footer';
 import { HeroComponent } from '@/components/Hero';
 import { Navbar } from '@/components/Navbar';
 import { Features } from '@/components/Features';
+import { useRouter } from 'next/navigation';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/redux/store';
+import { useEffect } from 'react';
 
 export default function LandingPage() {
+  const router = useRouter();
+
+  const { isAuthenticated, token } = useSelector((state: RootState) => state.auth);
+  
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      router.push('/rooms');
+    } 
+  }, [isAuthenticated, token]);
+
+
   return (
     <div className="min-h-screen bg-white">
       <Navbar />

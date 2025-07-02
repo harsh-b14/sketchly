@@ -1,9 +1,11 @@
 "use client";
 
 import { BACKEND_URL } from "@/config";
+import { restoreToken } from "@/lib/redux/slices/authSlice";
 import { Button } from "@repo/ui/button";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 
 export default function RoomsPage() {
@@ -12,6 +14,7 @@ export default function RoomsPage() {
     const [showJoinModal, setShowJoinModal] = useState(false);
     const [roomName, setRoomName] = useState("");
     const [roomLink, setRoomLink] = useState("");
+    const dispatch = useDispatch();
 
     useEffect(() => {
         async function fetchRooms() {
@@ -19,6 +22,7 @@ export default function RoomsPage() {
                 const token = localStorage.getItem("token");
                 if (token) {
                     axios.defaults.headers.common["Authorization"] = `${token}`;
+                    dispatch(restoreToken(token));
                 }
 
                 const res = await axios.get(`${BACKEND_URL}/api/v1/all-room`);
@@ -34,35 +38,35 @@ export default function RoomsPage() {
 
     const handleCreateRoom = async () => {
         if (!roomName) {
-        toast.error("Room name required");
-        return;
+            toast.error("Room name required");
+            return;
         }
 
         try {
-        const res = await axios.post(`${BACKEND_URL}/api/v1/create-room`, {
+            const res = await axios.post(`${BACKEND_URL}/api/v1/create-room`, {
             slug: roomName,
-        });
+            });
 
-        const room = {
-            id: res.data.roomId,
-            slug: res.data.slug,
-            adminId: res.data.adminId,
-        };
+            const room = {
+                id: res.data.roomId,
+                slug: res.data.slug,
+                adminId: res.data.adminId,
+            };
 
-        setRooms((prev) => [...prev, room]);
-        setShowCreateModal(false);
-        setRoomName("");
-        toast.success("Room created");
+            setRooms((prev) => [...prev, room]);
+            setShowCreateModal(false);
+            setRoomName("");
+            toast.success("Room created");
         } catch (err: any) {
-        console.error(err);
-        toast.error(err?.response?.data?.message || "Failed to create room");
+            console.error(err);
+            toast.error(err?.response?.data?.message || "Failed to create room");
         }
     };
 
     const handleJoinRoom = () => {
         if (!roomLink) {
-        toast.error("Enter a valid room link");
-        return;
+            toast.error("Enter a valid room link");
+            return;
         }
 
         toast.success("Joining room...");

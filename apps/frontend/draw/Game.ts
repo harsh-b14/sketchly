@@ -8,12 +8,19 @@ type Shape = {
     width: number;
     height: number;
 } | {
-    type: "circle";
+    type: "pencil";
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+} | {
+    type: "ellipse";
     centerX: number;
     centerY: number;
-    radius: number;
+    radiusX: number;
+    radiusY: number;
 } | {
-    type: "pencil";
+    type: "line";
     startX: number;
     startY: number;
     endX: number;
@@ -29,7 +36,7 @@ export class Game {
     private clicked: boolean;
     private startX = 0;
     private startY = 0;
-    private selectedTool: Tool = "circle";
+    private selectedTool: Tool = "rect";
 
     socket: WebSocket;
 
@@ -43,7 +50,6 @@ export class Game {
         this.init();
         this.initHandlers();
         this.initMouseHandlers();
-        // initDraw(canvas, roomId, socket);
     }
     
     destroy() {
@@ -54,14 +60,13 @@ export class Game {
         this.canvas.removeEventListener("mousemove", this.mouseMoveHandler)
     }
 
-    setTool(tool: "circle" | "pencil" | "rect") {
+    setTool(tool: "line" | "pencil" | "rect" | "ellipse") {
         this.selectedTool = tool;
     }
 
     async init() {
         this.existingShapes = await getExistingShapes(this.roomId);
-        console.log(this.existingShapes);
-        this.clearCanvas();
+        await this.clearCanvas();
     }
 
     initHandlers() {
@@ -77,22 +82,21 @@ export class Game {
         }
     }
 
-    clearCanvas() {
+    async clearCanvas() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.fillStyle = "rgba(0, 0, 0)"
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-        console.log("Drawing existing shapes: ", this.existingShapes);
 
         this.existingShapes.map((shape) => {
             if (shape.type === "rect") {
                 this.ctx.strokeStyle = "rgba(255, 255, 255)"
                 this.ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
-            } else if (shape.type === "circle") {
+            } else if (shape.type === "ellipse"){
                 this.ctx.beginPath();
-                this.ctx.arc(shape.centerX, shape.centerY, Math.abs(shape.radius), 0, Math.PI * 2);
+                this.ctx.ellipse(shape.centerX, shape.centerY, shape.radiusX, shape.radiusY, 0, 0, 2 * Math.PI);
                 this.ctx.stroke();
-                this.ctx.closePath();                
+            } else if (shape.type === "line"){
+                this.drawLine(shape.startX, shape.startY, shape.endX, shape.endY);
             }
         })
     }
@@ -118,13 +122,25 @@ export class Game {
                 height,
                 width
             }
-        } else if (selectedTool === "circle") {
-            const radius = Math.max(width, height) / 2;
+        } else if (selectedTool === "ellipse") {
+            const radiusX = Math.abs(width) / 2;
+            const radiusY = Math.abs(height) / 2;
+            const centerX = (width < 0) ? this.startX - radiusX : this.startX + radiusX;
+            const centerY = (height < 0) ? this.startY - radiusY : this.startY + radiusY;
             shape = {
-                type: "circle",
-                radius: radius,
-                centerX: this.startX + radius,
-                centerY: this.startY + radius,
+                type: "ellipse",
+                centerX,
+                centerY,
+                radiusX,
+                radiusY
+            }
+        } else if (selectedTool === "line"){
+            shape = {
+                type: "line",
+                startX: this.startX,
+                startY: this.startY,
+                endX: e.clientX,
+                endY: e.clientY
             }
         }
 
@@ -140,9 +156,24 @@ export class Game {
                 shape
             }),
             roomId: this.roomId
-        }))
+        }));
+    }
 
-        console.log("Sending shape: ", shape);
+    drawRectangle = (x: number, y: number, width: number, height: number) => {
+        this.ctx.strokeRect(x, y, width, height);   
+    }
+
+    drawEllipse = (centerX: number, centerY: number, radiusX: number, radiusY: number) => {
+        this.ctx.beginPath();
+        this.ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, 2 * Math.PI);
+        this.ctx.stroke();
+    }
+
+    drawLine = (startX: number, startY: number, endX: number, endY: number) => {
+        this.ctx.beginPath();
+        this.ctx.moveTo(startX, startY);
+        this.ctx.lineTo(endX, endY);
+        this.ctx.stroke();
     }
 
     mouseMoveHandler = (e: MouseEvent) => {
@@ -152,17 +183,16 @@ export class Game {
             this.clearCanvas();
             this.ctx.strokeStyle = "rgba(255, 255, 255)"
             const selectedTool = this.selectedTool;
-            // console.log(selectedTool)
             if (selectedTool === "rect") {
-                this.ctx.strokeRect(this.startX, this.startY, width, height);   
-            } else if (selectedTool === "circle") {
-                const radius = Math.max(width, height) / 2;
-                const centerX = this.startX + radius;
-                const centerY = this.startY + radius;
-                this.ctx.beginPath();
-                this.ctx.arc(centerX, centerY, Math.abs(radius), 0, Math.PI * 2);
-                this.ctx.stroke();
-                this.ctx.closePath();                
+                this.drawRectangle(this.startX, this.startY, width, height);
+            } else if (selectedTool === "ellipse") {
+                const radiusX = Math.abs(width) / 2;
+                const radiusY = Math.abs(height) / 2;
+                const centerX = (width < 0) ? this.startX - radiusX : this.startX + radiusX;
+                const centerY = (height < 0) ? this.startY - radiusY : this.startY + radiusY;
+                this.drawEllipse(centerX, centerY, radiusX, radiusY);
+            } else if (selectedTool === "line") {
+                this.drawLine(this.startX, this.startY, e.clientX, e.clientY);
             }
         }
     }

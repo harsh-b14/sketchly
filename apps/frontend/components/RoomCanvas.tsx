@@ -1,7 +1,7 @@
 "use client";
 
 import { WS_URL } from "@/config";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Canvas } from "./Canvas";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -13,8 +13,8 @@ export function RoomCanvas({roomId}: {roomId: string}) {
     useEffect(() => {
         const token = localStorage.getItem("token");
         if(!token){
-            toast .error("User not authenticated");
-            router.push("/login");
+            toast.error("Sign in to access the canvas.");
+            router.push("/signin");
             return;
         }
 
@@ -26,7 +26,6 @@ export function RoomCanvas({roomId}: {roomId: string}) {
                 type: "join_room",
                 roomId
             });
-            console.log(data);
             ws.send(data)
         }
         

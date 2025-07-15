@@ -22,6 +22,11 @@ export default function RoomsPage() {
         async function fetchRooms() {
             try {
                 const token = localStorage.getItem("token");
+                if(!token){
+                    toast.error("Sign in to access the canvas.");
+                    router.push("/signin");
+                    return;
+                }
                 if (token) {
                     axios.defaults.headers.common["Authorization"] = `${token}`;
                     dispatch(restoreToken(token));

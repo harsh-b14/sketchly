@@ -32,7 +32,7 @@ export function Canvas({
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const shareUrl = `${BACKEND_URL}/canvas/${roomId}`;
+  const shareUrl = `http://localhost:3000/canvas/${roomId}`;
 
   useEffect(() => {
     game?.setTool(selectedTool);

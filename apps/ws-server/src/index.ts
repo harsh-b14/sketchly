@@ -1,10 +1,14 @@
 import 'dotenv/config';
-import { WebSocketServer } from "ws";
+import { WebSocket, WebSocketServer } from "ws";
 import jwt from "jsonwebtoken";
-import { WebSocket } from "ws";
 import { prismaClient } from "@repo/db/client";
+import Redis from 'ioredis';
 
-const wss = new WebSocketServer({ port: 8080 });
+const PORT = Number(process.env.PORT || 8080);
+const wss = new WebSocketServer({ port: PORT });
+
+const pub = new Redis.default();
+const sub = new Redis.default();
 
 interface User {
     ws: WebSocket;
@@ -29,6 +33,22 @@ function checkUser(token: string): string | null {
     }
 }
 
+sub.subscribe("room-messages");
+
+sub.on("message", (channel, rawData) => {
+    const { roomId, message } = JSON.parse(rawData);
+    users.forEach(user => {
+        if (user.rooms.includes(String(roomId))) {
+            user.ws.send(JSON.stringify({
+                type: "chat",
+                message,
+                roomId
+            }));
+        }
+    });
+});
+
+
 wss.on("connection", async (ws, request) => {
     const url = request.url;
     if (!url) return;
@@ -37,7 +57,7 @@ wss.on("connection", async (ws, request) => {
     const token = queryParams.get("token") ?? "";
 
     const userId = checkUser(token);
-    if (userId == null) {
+    if (userId == null || !userId) {
         ws.close();
         return;
     }
@@ -62,8 +82,6 @@ wss.on("connection", async (ws, request) => {
             ws.send(JSON.stringify({ type: "error", message: "Invalid JSON format." }));
             return;
         }
-
-        console.log(parsedData);
 
         const user = users.find(u => u.ws === ws);
         if (!user) return;
@@ -113,7 +131,6 @@ wss.on("connection", async (ws, request) => {
                         type: "warning",
                         message: `You're not joined to room ${roomId}. Use "join_room" before chatting.`
                     }));
-                    console.log(`User ${user.userId} tried to send a message in room ${roomId} without joining.`);
                     return;
                 }
 
@@ -126,7 +143,6 @@ wss.on("connection", async (ws, request) => {
                         type: "warning",
                         message: `Room ${roomId} does not exist.`
                     }));
-                    console.log(`User ${user.userId} tried to send a message in non-existent room ${roomId}.`);
                     return;
                 }
 
@@ -143,18 +159,10 @@ wss.on("connection", async (ws, request) => {
                     return;
                 }
 
-                // Broadcast to all users in that room
-                users.forEach(u => {
-                    if (u.rooms.includes(String(roomId))) {
-                        u.ws.send(JSON.stringify({
-                            type: "chat",
-                            message: messageText,
-                            roomId,
-                        }));
-                    }
-                });
-
-                console.log(`User ${user.userId} sent a message in room ${roomId}: ${messageText}`);
+                await pub.publish("room-messages", JSON.stringify({
+                    roomId,
+                    message: messageText
+                }));
             }
 
         } catch (err) {
@@ -164,6 +172,11 @@ wss.on("connection", async (ws, request) => {
                 message: "An unexpected error occurred. Please try again later."
             }));
         }
+    });
+
+    ws.on("close", () => {
+        const index = users.findIndex(u => u.ws === ws);
+        if (index !== -1) users.splice(index, 1);
     });
 
     ws.send(JSON.stringify({ type: "info", message: "Connected to WebSocket server." }));

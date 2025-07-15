@@ -36,6 +36,7 @@ export default function RoomsPage() {
                 setRooms(res.data.rooms);
             } catch (error: any) {
                 console.error("Failed to fetch rooms:", error);
+                router.push("/signin");
                 toast.error(error?.response?.data?.message || "Could not fetch rooms");
             }
         }

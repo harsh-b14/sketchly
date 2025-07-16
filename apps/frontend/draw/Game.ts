@@ -42,7 +42,16 @@ export class Game {
     private lastX = 0;
     private lastY = 0;
     private selectedTool: Tool = "rect";
+    private color: string = "#ffffff";
+    private stroke: number = 2;
     socket: WebSocket;
+
+    setColor = (color: string) => {
+        this.color = color;
+    }
+    setStroke = (stroke: number) => {
+        this.stroke = stroke;
+    }
 
     constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket) {
         this.canvas = canvas;
@@ -96,22 +105,29 @@ export class Game {
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         this.existingShapes.forEach((shape) => {
-            console.log("shape", shape);
-            console.log("shape type", shape.type);
             if (shape.type === "rect") {
-                this.ctx.strokeStyle = "rgba(255, 255, 255)";
+                this.ctx.strokeStyle = this.color;
+                this.ctx.lineWidth = this.stroke;
                 this.ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
             } else if (shape.type === "ellipse") {
+                this.ctx.strokeStyle = this.color;
+                this.ctx.lineWidth = this.stroke;
                 this.drawEllipse(shape.centerX, shape.centerY, shape.radiusX, shape.radiusY);
             } else if (shape.type === "line") {
+                this.ctx.strokeStyle = this.color;
+                this.ctx.lineWidth = this.stroke;
                 this.drawLine(shape.startX, shape.startY, shape.endX, shape.endY);
             } else if (shape.type === "pencil_buffer") {
+                this.ctx.strokeStyle = this.color;
+                this.ctx.lineWidth = this.stroke;
                 shape.points.forEach((point) => {
                     if(point.type === "pencil" || point.type === "line") {
                         this.drawLine(point.startX, point.startY, point.endX, point.endY);
                     }
                 })
             } else if (shape.type === "pencil") {
+                this.ctx.strokeStyle = this.color;
+                this.ctx.lineWidth = this.stroke;
                 this.drawLine(shape.startX, shape.startY, shape.endX, shape.endY);
             }
         });
@@ -258,7 +274,8 @@ export class Game {
             const width = e.clientX - this.startX;
             const height = e.clientY - this.startY;
             this.clearCanvas();
-            this.ctx.strokeStyle = "rgba(255, 255, 255)";
+            this.ctx.strokeStyle = this.color;
+            this.ctx.lineWidth = this.stroke;
             const selectedTool = this.selectedTool;
 
             if (selectedTool === "rect") {

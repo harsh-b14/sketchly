@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
+import { Clipboard, Check } from "lucide-react";
 
 export default function RoomsPage() {
     const [rooms, setRooms] = useState<{ id: string; slug: string; adminId: string }[]>([]);
@@ -15,6 +16,7 @@ export default function RoomsPage() {
     const [showJoinModal, setShowJoinModal] = useState(false);
     const [roomName, setRoomName] = useState("");
     const [roomLink, setRoomLink] = useState("");
+    const [copiedRoomId, setCopiedRoomId] = useState<string | null>(null);
     const router = useRouter();
     const dispatch = useDispatch();
 
@@ -76,10 +78,15 @@ export default function RoomsPage() {
             toast.error("Enter a valid room link");
             return;
         }
-
-        toast.success("Joining room...");
-        setShowJoinModal(false);
-        setRoomLink("");
+        const match = roomLink.match(/\/canvas\/(\w+)/);
+        if (match && match[1]) {
+            const roomId = match[1];
+            setShowJoinModal(false);
+            setRoomLink("");
+            router.push(`/canvas/${roomId}`);
+        } else {
+            toast.error("Invalid room link");
+        }
     };
 
     return (
@@ -109,14 +116,28 @@ export default function RoomsPage() {
                     <p className="text-sm text-gray-300 mb-4">
                     Admin ID: <span className="font-mono break-words">{room.adminId}</span>
                     </p>
-                    <Button 
-                        onClick={() => {
-                            router.push(`/canvas/${room.id}`);
-                        }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 mt-auto w-full rounded-lg"
-                    >
-                    Open Room
-                    </Button>
+                    <div className="flex gap-2 mb-2">
+                        <Button 
+                            onClick={() => {
+                                router.push(`/canvas/${room.id}`);
+                            }}
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 w-full rounded-lg"
+                        >
+                        Open Room
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                const shareUrl = `${window.location.origin}/canvas/${room.id}`;
+                                navigator.clipboard.writeText(shareUrl);
+                                setCopiedRoomId(room.id);
+                                toast.success("Room link copied!");
+                                setTimeout(() => setCopiedRoomId(null), 2000);
+                            }}
+                            className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-2 rounded-lg flex items-center justify-center"
+                        >
+                            {copiedRoomId === room.id ? <Check className="w-5 h-5 text-green-400" /> : <Clipboard className="w-5 h-5" />}
+                        </Button>
+                    </div>
                 </div>
                 ))}
             </div>

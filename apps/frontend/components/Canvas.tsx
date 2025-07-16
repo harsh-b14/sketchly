@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { IconButton } from "./IconButton";
 import {
-  Circle,
   CircleDashed,
   Pencil,
   RectangleHorizontalIcon,
@@ -29,6 +28,8 @@ export function Canvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [game, setGame] = useState<Game>();
   const [selectedTool, setSelectedTool] = useState<Tool>("rect");
+  const [color, setColor] = useState<string>("#ffffff");
+  const [stroke, setStroke] = useState<number>(2);
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -36,7 +37,11 @@ export function Canvas({
 
   useEffect(() => {
     game?.setTool(selectedTool);
-  }, [selectedTool, game]);
+    if (game) {
+      game.setColor?.(color);
+      game.setStroke?.(stroke);
+    }
+  }, [selectedTool, color, stroke, game]);
 
   useEffect(() => {
     let g: Game;
@@ -81,6 +86,10 @@ export function Canvas({
       <Topbar
         selectedTool={selectedTool}
         setSelectedTool={setSelectedTool}
+        color={color}
+        setColor={setColor}
+        stroke={stroke}
+        setStroke={setStroke}
         onShare={() => setShowShareModal(true)}
       />
 
@@ -119,10 +128,18 @@ export function Canvas({
 function Topbar({
   selectedTool,
   setSelectedTool,
+  color,
+  setColor,
+  stroke,
+  setStroke,
   onShare,
 }: {
   selectedTool: Tool;
   setSelectedTool: (s: Tool) => void;
+  color: string;
+  setColor: (c: string) => void;
+  stroke: number;
+  setStroke: (n: number) => void;
   onShare: () => void;
 }) {
   return (
@@ -132,6 +149,13 @@ function Topbar({
         top: 10,
         left: 10,
         zIndex: 10,
+        background: "rgba(30,30,30,0.95)",
+        borderRadius: 16,
+        boxShadow: "0 2px 16px rgba(0,0,0,0.2)",
+        padding: 16,
+        display: "flex",
+        alignItems: "center",
+        gap: 16,
       }}
     >
       <div className="flex gap-2">
@@ -156,6 +180,28 @@ function Topbar({
           icon={<CircleDashed />}
         />
         <IconButton onClick={onShare} activated={false} icon={<Share2 />} />
+      </div>
+      <div className="flex items-center gap-2 ml-4">
+        <label className="text-white text-sm mr-2">Color</label>
+        <input
+          type="color"
+          value={color}
+          onChange={e => setColor(e.target.value)}
+          className="w-8 h-8 border-2 border-white rounded-full cursor-pointer"
+          style={{ background: color }}
+        />
+      </div>
+      <div className="flex items-center gap-2 ml-4">
+        <label className="text-white text-sm mr-2">Stroke</label>
+        <input
+          type="range"
+          min={1}
+          max={10}
+          value={stroke}
+          onChange={e => setStroke(Number(e.target.value))}
+          className="w-24 accent-blue-500"
+        />
+        <span className="text-white text-xs w-6 text-center">{stroke}</span>
       </div>
     </div>
   );

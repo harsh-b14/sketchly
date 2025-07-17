@@ -1,5 +1,6 @@
 import { Tool } from "@/components/Canvas";
 import { getExistingShapes } from "./http";
+import { RefObject } from "react";
 
 type Shape = {
     type: "rect";
@@ -44,6 +45,7 @@ export class Game {
     private selectedTool: Tool = "rect";
     private color: string = "#ffffff";
     private stroke: number = 2;
+    private toolRef?: RefObject<Tool>;
     socket: WebSocket;
 
     setColor = (color: string) => {
@@ -53,7 +55,7 @@ export class Game {
         this.stroke = stroke;
     }
 
-    constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket) {
+    constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket, toolRef?: RefObject<Tool>) {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d")!;
         this.existingShapes = [];
@@ -61,6 +63,7 @@ export class Game {
         this.roomId = roomId;
         this.socket = socket;
         this.clicked = false;
+        this.toolRef = toolRef;
         this.init();
         this.initHandlers();
         this.initMouseHandlers();
@@ -78,9 +81,7 @@ export class Game {
 
     async init() {
         this.existingShapes = await getExistingShapes(this.roomId);
-        if (this.existingShapes.length > 0) {
-            await this.clearCanvas();
-        }
+        await this.clearCanvas(); // Always clear and render, even if empty
     }
 
     initHandlers() {
@@ -201,7 +202,7 @@ export class Game {
         this.clicked = false;
         const width = e.clientX - this.startX;
         const height = e.clientY - this.startY;
-        const selectedTool = this.selectedTool;
+        const selectedTool = this.toolRef?.current ?? this.selectedTool;
         let shape: Shape | null = null;
     
         if (selectedTool === "rect") {
@@ -276,7 +277,7 @@ export class Game {
             this.clearCanvas();
             this.ctx.strokeStyle = this.color;
             this.ctx.lineWidth = this.stroke;
-            const selectedTool = this.selectedTool;
+            const selectedTool = this.toolRef?.current ?? this.selectedTool;
 
             if (selectedTool === "rect") {
                 this.drawRectangle(this.startX, this.startY, width, height);

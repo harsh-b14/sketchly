@@ -32,8 +32,11 @@ export function Canvas({
   const [stroke, setStroke] = useState<number>(2);
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const toolRef = useRef<Tool>(selectedTool);
 
-  const shareUrl = `http://localhost:3000/canvas/${roomId}`;
+  useEffect(() => {
+    toolRef.current = selectedTool;
+  }, [selectedTool]);
 
   useEffect(() => {
     game?.setTool(selectedTool);
@@ -48,7 +51,7 @@ export function Canvas({
 
     (async () => {
       if (canvasRef.current) {
-        g = new Game(canvasRef.current, roomId, socket);
+        g = new Game(canvasRef.current, roomId, socket, toolRef);
         await g.init();
         setGame(g);
         g.clearCanvas();

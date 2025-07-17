@@ -1,14 +1,12 @@
 import 'dotenv/config';
-import { WebSocket, WebSocketServer } from "ws";
+import { WebSocketServer } from "ws";
 import jwt from "jsonwebtoken";
+import { WebSocket } from "ws";
 import { prismaClient } from "@repo/db/client";
-import Redis from 'ioredis';
+import Redis from "ioredis";
 
 const PORT = Number(process.env.PORT || 8080);
 const wss = new WebSocketServer({ port: PORT });
-
-const pub = new Redis.default();
-const sub = new Redis.default();
 
 interface User {
     ws: WebSocket;
@@ -17,6 +15,12 @@ interface User {
 }
 
 const users: User[] = [];
+
+const redisPub = new Redis.default();
+const redisSub = new Redis.default();
+
+// Track which rooms this server is subscribed to
+const subscribedRooms = new Set<string>();
 
 function checkUser(token: string): string | null {
     try {
@@ -33,22 +37,6 @@ function checkUser(token: string): string | null {
     }
 }
 
-sub.subscribe("room-messages");
-
-sub.on("message", (channel, rawData) => {
-    const { roomId, message } = JSON.parse(rawData);
-    users.forEach(user => {
-        if (user.rooms.includes(String(roomId))) {
-            user.ws.send(JSON.stringify({
-                type: "chat",
-                message,
-                roomId
-            }));
-        }
-    });
-});
-
-
 wss.on("connection", async (ws, request) => {
     const url = request.url;
     if (!url) return;
@@ -57,7 +45,7 @@ wss.on("connection", async (ws, request) => {
     const token = queryParams.get("token") ?? "";
 
     const userId = checkUser(token);
-    if (userId == null || !userId) {
+    if (userId == null) {
         ws.close();
         return;
     }
@@ -83,6 +71,8 @@ wss.on("connection", async (ws, request) => {
             return;
         }
 
+        console.log(parsedData);
+
         const user = users.find(u => u.ws === ws);
         if (!user) return;
 
@@ -104,6 +94,12 @@ wss.on("connection", async (ws, request) => {
             
                 if (!user.rooms.includes(String(roomId))) {
                     user.rooms.push(String(roomId));
+                    // Subscribe to Redis channel for this room if not already
+                    const channel = `room:${roomId}`;
+                    if (!subscribedRooms.has(channel)) {
+                        await redisSub.subscribe(channel);
+                        subscribedRooms.add(channel);
+                    }
                 }
             
                 ws.send(JSON.stringify({
@@ -115,11 +111,11 @@ wss.on("connection", async (ws, request) => {
             if (parsedData.type === "leave_room") {
                 const roomId = parsedData.roomId;
                 user.rooms = user.rooms.filter(room => room !== String(roomId));
-
-                ws.send(JSON.stringify({
-                    type: "info",
-                    message: `Left room ${roomId}.`
-                }));
+                const channel = `room:${roomId}`;
+                if (subscribedRooms.has(channel)) {
+                    await redisSub.unsubscribe(channel);
+                    subscribedRooms.delete(channel);
+                }
             }
 
             if (parsedData.type === "chat") {
@@ -131,6 +127,7 @@ wss.on("connection", async (ws, request) => {
                         type: "warning",
                         message: `You're not joined to room ${roomId}. Use "join_room" before chatting.`
                     }));
+                    console.log(`User ${user.userId} tried to send a message in room ${roomId} without joining.`);
                     return;
                 }
 
@@ -143,6 +140,7 @@ wss.on("connection", async (ws, request) => {
                         type: "warning",
                         message: `Room ${roomId} does not exist.`
                     }));
+                    console.log(`User ${user.userId} tried to send a message in non-existent room ${roomId}.`);
                     return;
                 }
 
@@ -158,11 +156,16 @@ wss.on("connection", async (ws, request) => {
                     console.log("Failed to create chat message in database.");
                     return;
                 }
-
-                await pub.publish("room-messages", JSON.stringify({
+                // Publish to Redis instead of local broadcast
+                const payload = JSON.stringify({
+                    type: "chat",
+                    message: messageText,
                     roomId,
-                    message: messageText
-                }));
+                    userId: user.userId
+                });
+                redisPub.publish(`room:${roomId}`, payload);
+                // No local broadcast here; handled by Redis subscription below
+                console.log(`User ${user.userId} sent a message in room ${roomId}: ${messageText}`);
             }
 
         } catch (err) {
@@ -174,10 +177,24 @@ wss.on("connection", async (ws, request) => {
         }
     });
 
-    ws.on("close", () => {
-        const index = users.findIndex(u => u.ws === ws);
-        if (index !== -1) users.splice(index, 1);
-    });
-
     ws.send(JSON.stringify({ type: "info", message: "Connected to WebSocket server." }));
+});
+
+// Listen for messages from Redis and broadcast to local users
+redisSub.on("message", (channel, message) => {
+    // channel format: room:{roomId}
+    const roomId = channel.split(":")[1];
+    let parsed;
+    try {
+        parsed = JSON.parse(message);
+    } catch (e) {
+        console.error("Invalid JSON from Redis pubsub:", message);
+        return;
+    }
+    // Broadcast to all local users in this room
+    users.forEach(u => {
+        if (u.rooms.includes(String(roomId))) {
+            u.ws.send(JSON.stringify(parsed));
+        }
+    });
 });

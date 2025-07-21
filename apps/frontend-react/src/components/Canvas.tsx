@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useRef, useState } from "react";
 import { IconButton } from "./IconButton";
 import {
@@ -11,9 +9,8 @@ import {
   Clipboard,
   Slash,
 } from "lucide-react";
-import { Game } from "@/draw/Game";
+import { Game } from "../draw/Game";
 import { Button } from "@repo/ui/button";
-import { BACKEND_URL } from "@/config";
 import { Input } from "@repo/ui/input";
 
 export type Tool = "line" | "pencil" | "rect" | "ellipse";
@@ -104,12 +101,11 @@ export function Canvas({
               <Input
                 className="w-full pr-10 read-only:"
                 type="text"
-                value={}
-                onChange={(e) => (e.target as HTMLInputElement).select()}
+                value={window.location.href}
               />
               <Button
-                onClick={() => shareUrl{
-                  navigator.clipboard.writeText(shareUrl);
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
                   setCopied(true);
                   setTimeout(() => setCopied(false), 2000);
                 }}

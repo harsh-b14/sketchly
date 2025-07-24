@@ -1,4 +1,3 @@
-import { WS_URL } from "../config";
 import { useEffect, useState } from "react";
 import { Canvas } from "./Canvas";
 import { toast } from "sonner";

@@ -1,4 +1,4 @@
-import { ArrowRight, Check, Lightbulb, MessageSquare, MousePointer2, Target, Zap, Play } from "lucide-react";
+import { ArrowRight, Check, Lightbulb, MessageSquare, MousePointer2, Target } from "lucide-react";
 
 export function HeroComponent(){
     return(

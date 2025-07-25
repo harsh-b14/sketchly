@@ -3,6 +3,7 @@
   "ui": "tui",
   "tasks": {
     "build": {
+      "cache": true,
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
@@ -14,8 +15,11 @@
       "dependsOn": ["^check-types"]
     },
     "dev": {
-      "cache": false,
+      "cache": true,
       "persistent": true
+    },
+    "start": {
+      "dependsOn": []
     }
   }
 }

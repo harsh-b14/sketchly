@@ -1,135 +1,77 @@
-# Turborepo starter
+# Sketchly
 
-This Turborepo starter is maintained by the Turborepo core team.
+Sketchly is a simple collaborative drawing tool that allows users to create and share sketches in real time. It provides basic drawing functionalities and supports multiple users working together in a shared space.
 
-## Using this example
+## Features
+- **Authentication**: Secure user authentication using JSON Web Tokens (JWT).
+- **Room Creation and Sharing**: Create and share rooms using unique sharable links for collaboration.
+- **Real-time Collaboration**: Seamless real-time communication powered by WebSocket and Redis Pub/Sub.
+- **Basic Drawing Functionalities**: Includes tools for drawing objects to create and edit sketches.
+- **Optimized Performance**: Leveraging pnpm and TurboRepo for faster builds and dependency management.
 
-Run the following command:
+## Technology
+- **Frontend**: React.js for building the user interface.
+- **Backend**: Node.js with Express.js for handling server-side logic.
+- **Database**: PostgreSQL for robust and reliable data storage.
+- **ORM**: PrismaORM for database interactions, schema migrations, and type-safe queries.
+- **Authentication**: JSON Web Tokens (JWT) for secure and stateless user authentication.
+- **TypeScript**: Ensures type safety and enhances developer productivity.
+- **Real-time Communication**: Redis Pub/Sub over a WebSocket layer to enable real-time updates and interactions.
+- **Monorepo Management**: TurboRepo for efficient management of multiple packages in the project.
+- **Package Manager**: pnpm for faster and efficient dependency management.
 
-```sh
-npx create-turbo@latest
+## Architecture
+### Basic Architecture
+
+Sketchly comprises an HTTP server (Express.js) for RESTful APIs, a WebSocket server for real-time collaboration, and a PostgreSQL database for persistent storage. Both servers interact with the database via PrismaORM, ensuring efficient and type-safe operations.
+
+### Implemented Architecture
+
+
+## Local Setup Guide
+
+### Requirements
+- Node version 20.0.0 or later
+- pnpm version 9.0.0 or later
+- git to clone the repo locally
+- Install pnpm using npm
+- Docker 28.0.0 or later
+```
+npm install -g pnpm
 ```
 
-## What's inside?
+### Steps to setup
 
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
+1. Clone the repo locally
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+git clone https://github.com/harsh-b14/sketchly`
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
+2. Install dependencies
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+pnpm install
 ```
 
-### Develop
-
-To develop all apps and packages, run the following command:
-
+3. Set the PostgreSQL database either locally using docker or start from NeonDB. Then enter the ``` DATABASE_URL ``` in .env file. Run the following commands to migrate the databse and genrate the prisma client.
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+pnpm run db:migrate
+pnpm run db:generate
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
+4. Start the redis server locallu using Docker.
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+docker run -d -p 6379:6379 redis:latest
 ```
 
-### Remote Caching
+5. Enter you ``` JWT_SECRET ``` in .env file. 
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
+6. Run the dev script from root folder.
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+pnpm run dev
+```
+Else first build the project and then start it.
+```
+pnpm run build
+pnpm run start
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
